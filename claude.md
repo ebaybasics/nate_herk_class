@@ -73,6 +73,7 @@ This project is sandboxed. Stay within `/home/sovereign-os/nate_herk_projects_n8
 - **Obsidian notes** — write to `/home/sovereign-os/data/obsidian/vaults/Signal-Zero/` only
 - **n8n workflows** — read/write to `/home/sovereign-os/n8n-workflows/` to push workflow JSON
 - **n8n MCP tool** — allowed for workflow management via the MCP server
+- **Sandbox previews** — write HTML output to `/home/sovereign-os/apps/sandbox/www/` for visual preview at `https://sandbox.kccleancarpets.com`
 
 Do not read or write anywhere else in the sovereign-os project tree.
 
