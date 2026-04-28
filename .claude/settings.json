@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "additionalDirectories": [
+      "/home/sovereign-os/data/obsidian/vaults/Signal-Zero",
+      "/home/sovereign-os/n8n-workflows"
+    ]
+  }
+}

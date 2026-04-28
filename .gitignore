@@ -1,0 +1,15 @@
+# Secrets — never commit
+.env
+credentials.json
+token.json
+
+# Temporary processing files — regenerated as needed
+.tmp/*
+!.tmp/.gitkeep
+
+# Python
+__pycache__/
+*.pyc
+
+# Machine-specific Claude Code settings
+.claude/settings.local.json
