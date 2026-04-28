@@ -13,3 +13,6 @@ __pycache__/
 
 # Machine-specific Claude Code settings
 .claude/settings.local.json
+
+# Symlink to sandbox inbox (host-specific path)
+sandbox-inbox
