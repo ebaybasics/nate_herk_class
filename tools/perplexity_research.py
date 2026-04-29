@@ -1,11 +1,19 @@
-import os, sys, json, re, requests
+import os
+import sys
+import json
+import re
+import requests
 
 
 def research(topic: str) -> dict:
+    api_key = os.environ.get("PERPLEXITY_API_KEY")
+    if not api_key:
+        raise EnvironmentError("PERPLEXITY_API_KEY is not set")
+
     response = requests.post(
         "https://api.perplexity.ai/chat/completions",
         headers={
-            "Authorization": f"Bearer {os.environ['PERPLEXITY_API_KEY']}",
+            "Authorization": f"Bearer {api_key}",
             "Content-Type": "application/json",
         },
         json={
@@ -27,11 +35,26 @@ def research(topic: str) -> dict:
         timeout=30,
     )
     response.raise_for_status()
-    content = response.json()["choices"][0]["message"]["content"]
-    match = re.search(r"\{.*\}", content, re.DOTALL)
+
+    try:
+        raw = response.json()
+        content = raw["choices"][0]["message"]["content"]
+    except (KeyError, IndexError) as exc:
+        raise ValueError(f"Unexpected Perplexity response shape: {exc}\nResponse: {str(raw)[:300]}") from exc
+
+    # Try direct parse first; fall back to regex extraction
+    try:
+        return json.loads(content.strip())
+    except json.JSONDecodeError:
+        pass
+
+    match = re.search(r"\{.*?\}", content, re.DOTALL)
     if not match:
         raise ValueError(f"No JSON in Perplexity response: {content[:300]}")
-    return json.loads(match.group())
+    try:
+        return json.loads(match.group())
+    except json.JSONDecodeError as exc:
+        raise ValueError(f"Invalid JSON extracted from response: {exc}\nExtracted: {match.group()[:300]}") from exc
 
 
 if __name__ == "__main__":
