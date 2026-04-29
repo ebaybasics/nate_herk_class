@@ -3,6 +3,8 @@ import json
 import os
 import sys
 import base64
+from unittest.mock import patch, MagicMock
+import importlib.util
 
 
 def run_tool(script, input_text=None, args=None):
@@ -56,3 +58,30 @@ def test_chart_returns_valid_base64_png():
     assert result.returncode == 0, f"Tool failed:\n{result.stderr}"
     raw = base64.b64decode(result.stdout.strip())
     assert raw[:8] == b"\x89PNG\r\n\x1a\n", "Output is not a valid PNG"
+
+
+def test_brevo_chart_injected_and_api_called():
+    spec = importlib.util.spec_from_file_location("brevo_send", "tools/brevo_send.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+
+    payload = {
+        "subject": "Test Newsletter",
+        "preview_text": "A quick preview",
+        "html_body": "<h1>Hello</h1><p>{{CHART}}</p>",
+        "plain_text": "Hello",
+        "chart_base64": "iVBORw0KGgo=",
+    }
+
+    mock_resp = MagicMock()
+    mock_resp.json.return_value = {"messageId": "abc-123"}
+    mock_resp.raise_for_status = lambda: None
+
+    with patch.dict(os.environ, {"BREVO_API_KEY": "test-key", "BREVO_TEST_EMAIL": "test@example.com"}):
+        with patch("requests.post", return_value=mock_resp) as mock_post:
+            result = mod.send_newsletter(payload)
+
+    sent_html = mock_post.call_args.kwargs["json"]["htmlContent"]
+    assert "{{CHART}}" not in sent_html, "Placeholder was not replaced"
+    assert "data:image/png;base64,iVBORw0KGgo=" in sent_html, "Chart not embedded"
+    assert result["status"] == "sent"
