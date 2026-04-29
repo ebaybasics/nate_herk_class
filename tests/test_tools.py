@@ -2,6 +2,7 @@ import subprocess
 import json
 import os
 import sys
+import base64
 
 
 def run_tool(script, input_text=None, args=None):
@@ -43,3 +44,15 @@ def test_research_fails_without_api_key():
     )
     assert result.returncode != 0
     assert "PERPLEXITY_API_KEY" in result.stderr or "PERPLEXITY_API_KEY" in result.stdout
+
+
+def test_chart_returns_valid_base64_png():
+    chart_data = json.dumps({
+        "title": "Top Automation Tools",
+        "labels": ["n8n", "Zapier", "Make"],
+        "values": [72, 58, 44],
+    })
+    result = run_tool("generate_chart.py", input_text=chart_data)
+    assert result.returncode == 0, f"Tool failed:\n{result.stderr}"
+    raw = base64.b64decode(result.stdout.strip())
+    assert raw[:8] == b"\x89PNG\r\n\x1a\n", "Output is not a valid PNG"
